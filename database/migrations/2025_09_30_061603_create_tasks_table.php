@@ -6,19 +6,28 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
+    
     public function up(): void
     {
-    Schema::create('tasks', function (Blueprint $table) {
-        $table->id();
-        $table->string('title');
-        $table->text('description')->nullable();
-        $table->boolean('is_completed')->default(false);
-        $table->foreignId('user_id')->constrained()->onDelete('cascade'); // user ka link
-        $table->timestamps();
-    });
+        Schema::create('tasks', function (Blueprint $table) {
+            $table->id();
+
+            // Foreign key: each task belongs to a user
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+
+            // Task fields
+            $table->string('title');
+            $table->text('description')->nullable();
+            $table->date('due_date')->nullable();
+
+            // Status with default 'pending'
+            $table->enum('status', ['pending', 'completed'])->default('pending');
+
+            // Category field (optional, can be null)
+            $table->unsignedBigInteger('category_id')->nullable();
+
+            $table->timestamps();
+        });
     }
 
     /**

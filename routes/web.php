@@ -6,10 +6,6 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\TaskController;
 
-
-
-
-
 Route::get('/', function () {
     return view('welcome');
 });
@@ -21,9 +17,10 @@ Route::get('/home', function () {
     return "You are not logged in";
 })->name('home')->middleware('auth');
 
-
+// Register routes
 Route::get('register', [RegisterController::class, 'showRegistrationForm'])->name('register.form');
 Route::post('register', [RegisterController::class, 'register'])->name('register');
+
 // Login routes
 Route::get('login', [LoginController::class, 'showLoginForm'])->name('login.form');
 Route::post('login', [LoginController::class, 'login'])->name('login');
@@ -31,4 +28,7 @@ Route::post('logout', [LoginController::class, 'logout'])->name('logout');
 
 Route::middleware('auth')->group(function () {
     Route::resource('tasks', TaskController::class);
+
+    // Custom route for status update
+    Route::patch('tasks/{task}/status', [TaskController::class, 'updateStatus'])->name('tasks.updateStatus');
 });
