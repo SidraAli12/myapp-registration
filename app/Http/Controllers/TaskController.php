@@ -11,58 +11,55 @@ class TaskController extends Controller
 {
     use AuthorizesRequests;
 
-    /**
-     * Show all tasks for logged-in user
-     */
-    public function index()
+    // Show all tasks
+    public function index(Request $request)
     {
-        $tasks = Task::where('user_id', Auth::id())->get();  // Sirf current logged-in user ke tasks fetch karo
+        $tasks = Task::where('user_id', Auth::id())->get(); // sary records ko fetch kary ga jaha userid loggedin user sy match kary ge 
+
+        if ($request->ajax()) {            // If the request is AJAX, return JSON instead of a view
+
+            return response()->json($tasks);  
+        }
+
         return view('tasks.index', compact('tasks'));
     }
 
-    /**
-     * Show create task form
-     */
-    public function create()
-    {
-        return view('tasks.create');  // Sirf form dikhata hai jahan se user task add karega
-    }
-
-    /**
-     * Store new task
-     */
+    // Store new task
     public function store(Request $request)
     {
-        $request->validate([  // Validation: title required hai, baqi optional
+        $request->validate([  //ye sub inputs hai 
             'title'       => 'required|string|max:255',
             'description' => 'nullable|string',
             'due_date'    => 'nullable|date',
-            'status' => 'required|in:pending,completed',
+            'status'      => 'nullable|in:pending,completed',
         ]);
 
-        Task::create([   // ye array Task create karna aur user_id automatically assign karna
+        $task = Task::create([
             'title'       => $request->title,
             'description' => $request->description,
             'due_date'    => $request->due_date,
-            'status'      => 'pending',   // default
+            'status'      => $request->status ?? 'pending',
             'user_id'     => Auth::id(),
         ]);
 
-        return redirect()->route('tasks.index')->with('success', 'Task created!');
+        return response()->json(['success' => true, 'task' => $task]); //jeson response denga sucsess ka
+    }
+ //aur phr hum ajx ky through crud karengy 
+    // Show single task
+    public function show(Task $task)
+    {
+        $this->authorize('view', $task);
+        return response()->json($task);
     }
 
-    /**
-     * Show edit task form
-     */
+    // Edit method (for AJAX edit form)
     public function edit(Task $task)
     {
         $this->authorize('update', $task);
-        return view('tasks.edit', compact('task'));
+        return response()->json($task);
     }
 
-    /**
-     * Update task details
-     */
+    // Update task
     public function update(Request $request, Task $task)
     {
         $this->authorize('update', $task);
@@ -71,38 +68,35 @@ class TaskController extends Controller
             'title'       => 'required|string|max:255',
             'description' => 'nullable|string',
             'due_date'    => 'nullable|date',
+            'status'      => 'required|in:pending,completed',
         ]);
 
-        $task->update($request->only('title', 'description', 'due_date','status'));
+        $task->update($request->only('title', 'description', 'due_date', 'status'));
 
-        return redirect()->route('tasks.index')->with('success', 'Task updated!');
+        return response()->json(['success' => true, 'task' => $task]);
     }
 
-    /**
-     * Delete task
-     */
+    // Delete task
     public function destroy(Task $task)
     {
-        $this->authorize('delete', $task); // Policy check: sirf owner apna task delete kare
+        $this->authorize('delete', $task);
 
         $task->delete();
 
-        return redirect()->route('tasks.index')->with('success', 'Task deleted!');
+        return response()->json(['success' => true]);
     }
 
-    /**
-     * Update only status of task
-     */
+    // Update only status
     public function updateStatus(Request $request, Task $task)
     {
         $this->authorize('update', $task);
 
-        $request->validate([
+        $request->validate([ //ye array ky through dekhengy ky pending hai status ya complete 
             'status' => 'required|in:pending,completed',
         ]);
 
-        $task->update(['status' => $request->status]);  // Status validation: sirf pending ya completed allow hai
+        $task->update(['status' => $request->status]);
 
-        return redirect()->route('tasks.index')->with('success', 'Task status updated!');
+        return response()->json(['success' => true, 'task' => $task]);
     }
 }

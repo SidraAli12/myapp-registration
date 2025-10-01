@@ -27,7 +27,7 @@ Route::post('login', [LoginController::class, 'login'])->name('login');
 Route::post('logout', [LoginController::class, 'logout'])->name('logout');
 
 Route::middleware('auth')->group(function () {
-    Route::resource('tasks', TaskController::class);
+Route::resource('tasks', TaskController::class)->except(['create', 'edit']);
 
     // Custom route for status update
     Route::patch('tasks/{task}/status', [TaskController::class, 'updateStatus'])->name('tasks.updateStatus');

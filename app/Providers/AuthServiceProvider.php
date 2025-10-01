@@ -9,7 +9,9 @@ use App\Policies\TaskPolicy;
 class AuthServiceProvider extends ServiceProvider
 {
     protected $policies = [
-        Task::class => TaskPolicy::class,
+       // Task::class => TaskPolicy::class,
+           \App\Models\Task::class => \App\Policies\TaskPolicy::class,
+
     ];
 
     public function boot(): void

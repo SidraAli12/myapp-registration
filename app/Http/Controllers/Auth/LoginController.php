@@ -10,7 +10,7 @@ class LoginController extends Controller
 {
     public function showLoginForm()
     {
-        return view('auth.login'); //ye jaa kar auth login ko show kary ga 
+        return view('auth.login');
     }
 
     public function login(Request $request)
@@ -21,15 +21,32 @@ class LoginController extends Controller
             'password' => 'required',
         ]);
 
-        // Try login
+        // Attempt login
         if (Auth::attempt($credentials)) {
-            $request->session()->regenerate(); // new session
-            return redirect()->intended('home')->with('success', 'You are logged in!'); // after login ye jaye ga hum page pr 
+            $request->session()->regenerate();
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'You are logged in!',
+                    'user'    => Auth::user()
+                ]);
+            }
+
+            return redirect()->intended('home')->with('success', 'You are logged in!');
+        }
+
+        // Fail case
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid email or password.'
+            ], 422);
         }
 
         return back()->withErrors([
             'email' => 'Invalid email or password.',
-        ])->onlyInput('email'); // ager error hua tou show kary ga 
+        ])->onlyInput('email');
     }
 
     public function logout(Request $request)
@@ -41,4 +58,3 @@ class LoginController extends Controller
         return redirect('/login')->with('success', 'You are logged out!');
     }
 }
-
